@@ -1,0 +1,4 @@
+interface:
+  display_name: "RStroke Conversion"
+  short_description: "Convert filled SVG icons to editable centerline strokes"
+  default_prompt: "Convert this SVG to stroke-editable paths for Figma while preserving proportions and close geometry."
