@@ -386,18 +386,28 @@
     .checks-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0 var(--sp-32);
+      gap: var(--sp-8);
     }
     .check-row {
       display: flex;
       align-items: center;
       gap: var(--sp-12);
-      padding: var(--sp-12) 0;
-      border-bottom: 1px solid var(--c-gray-10);
+      padding: var(--sp-12) var(--sp-16);
+      background: var(--c-gray-0);
+      border: 1.5px solid var(--c-gray-10);
+      border-left-width: 3px;
+      border-left-color: var(--c-gray-20);
+      border-radius: var(--r-l);
+      box-shadow: var(--sh-card);
+      transition: box-shadow 0.15s ease;
     }
+    .check-row:hover { box-shadow: var(--sh-hover); }
+    .check-row.ok   { border-left-color: var(--c-ok-60);     background: #FDFFFE; }
+    .check-row.warn { border-left-color: var(--c-warn-40);   background: #FFFDF9; }
+    .check-row.fail { border-left-color: var(--c-danger-50); background: #FFFBFB; }
     .check-icon { flex-shrink: 0; width: 20px; height: 20px; }
-    .check-label { flex: 1; font-size: 14px; color: var(--c-gray-70); }
-    .check-target { font-size: 12px; color: var(--c-gray-30); white-space: nowrap; }
+    .check-label { flex: 1; font-size: 13px; color: var(--c-gray-70); }
+    .check-target { font-size: 11px; color: var(--c-gray-30); white-space: nowrap; }
 
     .status-chip {
       font-size: 12px;
@@ -677,11 +687,12 @@
     <!-- ━━━ NAMING & CONSISTENCY ━━━━━━━━━━━━━━━━━━━━━━ -->
     <section class="section">
       <h2 class="section-title">Naming and Semantic Consistency</h2>
-      <div class="panel">
-        <div class="checks-grid">
+      <div class="checks-grid">
           <!--
-            Each check row example:
-            <div class="check-row">
+            Each check row — add class ok/warn/fail to .check-row to apply the colored left border.
+
+            OK example:
+            <div class="check-row ok">
               <div class="check-icon">
                 <svg viewBox="0 0 20 20" fill="none" width="20" height="20">
                   <circle cx="10" cy="10" r="10" fill="#F1F8EA"/>
@@ -692,9 +703,34 @@
               <span class="check-target">target 100%</span>
               <span class="status-chip ok">98%</span>
             </div>
+
+            WARN example:
+            <div class="check-row warn">
+              <div class="check-icon">
+                <svg viewBox="0 0 20 20" fill="none" width="20" height="20">
+                  <circle cx="10" cy="10" r="10" fill="#FEF6E6"/>
+                  <path d="M10 6v5M10 13.5v.5" stroke="#F57504" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <span class="check-label">Semantic alias depth ≤ 2</span>
+              <span class="check-target">target 100%</span>
+              <span class="status-chip warn">84%</span>
+            </div>
+
+            FAIL example:
+            <div class="check-row fail">
+              <div class="check-icon">
+                <svg viewBox="0 0 20 20" fill="none" width="20" height="20">
+                  <circle cx="10" cy="10" r="10" fill="#FFEFF1"/>
+                  <path d="M7 7l6 6M13 7l-6 6" stroke="#E0031F" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <span class="check-label">No hardcoded color values</span>
+              <span class="check-target">target 0</span>
+              <span class="status-chip fail">12 found</span>
+            </div>
           -->
           {{consistencyChecks}}
-        </div>
       </div>
     </section>
 
@@ -866,4 +902,3 @@
   </div>
 </body>
 </html>
-
