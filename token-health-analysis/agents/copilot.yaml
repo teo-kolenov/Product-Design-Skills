@@ -1,0 +1,4 @@
+interface:
+  display_name: "Token Health Analysis"
+  short_description: "Build HTML token strategy analysis reports from design or token source files"
+  default_prompt: "/token-health-analysis HELP"

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Token Health Analysis"
+  short_description: "Generate a token strategy health report HTML from Figma URL, JSON, or text token inputs"
+  default_prompt: "/token-health-analysis HELP"
