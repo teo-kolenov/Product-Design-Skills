@@ -1,1 +1,869 @@
+<!DOCTYPE html>
+<!--
+  token-strategy-dashboard.template.html
+  Token Health Analysis Skill — Output Template
+  ─────────────────────────────────────────────
+  PLACEHOLDER REFERENCE  (replace every {{…}} before delivery)
+
+  {{reportTitle}}            Plain text — page <title> and H1
+  {{reportSubtitle}}         One-line description of the source / scope
+  {{sourceLabel}}            Source file name(s) or Figma URL
+  {{generatedDate}}          ISO date, e.g. "2026-06-02"
+  {{headerBadges}}           One or more <span class="badge badge-glass">…</span>
+
+  {{metricCards}}            One or more <article class="metric-card status-{ok|warn|fail|brand|info}">
+                               <p class="metric-label">…</p>
+                               <p class="metric-value {ok|warn|fail|brand|muted}">…</p>
+                               <span class="metric-pill {ok|warn|fail|brand|muted}">Target: …</span>
+                             </article>
+
+  {{healthScorePercent}}     Integer 0-100  (drives the conic-gradient ring)
+  {{healthScoreLabel}}       Short label inside ring, e.g. "78%"
+  {{healthScoreColor}}       CSS color for the filled arc, e.g. var(--c-ok-60)
+  {{healthRingStats}}        One or more <div class="ring-stat"> blocks (see below)
+
+  {{consistencyChecks}}      One or more <div class="check-row"> blocks:
+                               <div class="check-icon"><!-- SVG --></div>
+                               <span class="check-label">…</span>
+                               <span class="check-target">target …</span>
+                               <span class="status-chip {ok|warn|fail}">…</span>
+
+  {{reuseBarRows}}           One or more <div class="bar-row"> blocks:
+                               <span class="bar-label">token-name</span>
+                               <div class="bar-track"><div class="bar-fill brand" style="width:XX%"></div></div>
+                               <span class="bar-count">N×</span>
+
+  {{reuseNote}}              Short plain-text note about reuse findings
+
+  {{modeCoverageRows}}       One or more <div class="coverage-row"> blocks:
+                               <span class="coverage-name">ComponentName</span>
+                               <div class="coverage-track">
+                                 <div class="coverage-seg seg-light" style="width:50%"></div>
+                                 <div class="coverage-seg seg-dark"  style="width:50%"></div>
+                               </div>
+                               <span class="coverage-score {full|partial|low}">2/2</span>
+
+  {{modeCoverageNote}}       Short note about mode coverage findings
+
+  {{semanticDuplicateRows}}  One <tr> per duplicate pair:
+                               <td>
+                                 <div class="dup-card">
+                                   <div class="dup-row a"><span class="dup-label">Token A</span><span class="dup-token">name-a</span></div>
+                                   <div class="dup-divider">same as</div>
+                                   <div class="dup-row b"><span class="dup-label">Token B</span><span class="dup-token">name-b</span></div>
+                                 </div>
+                               </td>
+                               <td>Evidence text…</td>
+                               <td class="col-token-name">normalization-target</td>
+
+  {{semanticDuplicatesCount}} Integer count
+
+  {{directOverrideRows}}     One <tr> per override:
+                               <td>Area name</td>
+                               <td class="col-literal">#HEX</td>
+                               <td class="col-replacement">var(--token)</td>
+                               <td>Details…</td>
+
+  {{directOverridesCount}}   Integer count
+
+  {{inventoryRows}}          One <tr> per group (use rowspan on Collection cell):
+                               <td class="col-collection" rowspan="N">Collection</td>
+                               <td class="col-token-name">group/path</td>
+                               <td>TYPE</td>
+                               <td><span class="count-pill">N</span></td>
+                               <td>
+                                 <span class="mode-tag active">Light</span>
+                                 <span class="mode-tag missing">Dark</span>
+                               </td>
+
+  {{footerText}}             Short attribution / disclaimer line
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{reportTitle}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Design tokens ───────────────────────────────── */
+    :root {
+      --c-brand-10: #E0EEFD;
+      --c-brand-20: #AAD0F8;
+      --c-brand-40: #219CDE;
+      --c-brand-50: #007BBE;
+      --c-brand-60: #005F97;
+      --c-brand-80: #0F2D52;
+
+      --c-gray-0:  #FFFFFF;
+      --c-gray-5:  #F7F8F9;
+      --c-gray-10: #F0F2F4;
+      --c-gray-20: #D0D4DA;
+      --c-gray-30: #989AA1;
+      --c-gray-40: #797D89;
+      --c-gray-50: #6A6F7C;
+      --c-gray-60: #515660;
+      --c-gray-70: #3F424D;
+      --c-gray-80: #303237;
+
+      --c-ok-10: #F1F8EA;
+      --c-ok-60: #439C0B;
+      --c-ok-70: #016E1C;
+
+      --c-warn-10: #FEF6E6;
+      --c-warn-40: #F57504;
+      --c-warn-60: #AD3F00;
+      --c-warn-70: #7C2E01;
+
+      --c-danger-10: #FFEFF1;
+      --c-danger-50: #E0031F;
+      --c-danger-60: #AA0015;
+
+      --sp-4:  4px;  --sp-6:  6px;  --sp-8:  8px;  --sp-10: 10px;
+      --sp-12: 12px; --sp-16: 16px; --sp-20: 20px; --sp-24: 24px;
+      --sp-32: 32px; --sp-40: 40px; --sp-48: 48px;
+
+      --r-s:   4px;
+      --r-m:   6px;
+      --r-l:   8px;
+      --r-xl:  12px;
+      --r-xxl: 16px;
+
+      --sh-card:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --sh-hover: 0 4px 16px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+    }
+
+    /* ── Reset ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      font-size: 14px;
+      line-height: 20px;
+      color: var(--c-gray-80);
+      background: var(--c-gray-5);
+      padding: var(--sp-32);
+      min-height: 100vh;
+    }
+
+    /* ── Layout ──────────────────────────────────────── */
+    .dashboard { max-width: 1280px; margin: 0 auto; }
+    .section   { margin-bottom: var(--sp-40); }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--c-gray-40);
+      margin-bottom: var(--sp-12);
+    }
+
+    /* ── Header ──────────────────────────────────────── */
+    .dashboard-header {
+      position: relative;
+      border-radius: var(--r-xxl);
+      background: linear-gradient(135deg, var(--c-brand-80) 0%, var(--c-brand-60) 55%, var(--c-brand-50) 100%);
+      padding: var(--sp-32) var(--sp-40);
+      margin-bottom: var(--sp-40);
+      overflow: hidden;
+    }
+    .dashboard-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 75% 40%, rgba(255,255,255,0.08) 0%, transparent 55%);
+      pointer-events: none;
+    }
+    .header-inner {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--sp-24);
+      flex-wrap: wrap;
+    }
+    .header-title {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.3px;
+      color: #fff;
+      margin-bottom: var(--sp-8);
+    }
+    .header-subtitle {
+      font-size: 14px;
+      line-height: 20px;
+      color: rgba(255,255,255,0.72);
+      margin-bottom: var(--sp-16);
+      max-width: 560px;
+    }
+    .header-badges { display: flex; gap: var(--sp-8); flex-wrap: wrap; }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 500;
+      padding: var(--sp-4) var(--sp-8);
+      border-radius: var(--r-s);
+      white-space: nowrap;
+    }
+    .badge-glass {
+      background: rgba(255,255,255,0.14);
+      color: rgba(255,255,255,0.88);
+      border: 1px solid rgba(255,255,255,0.22);
+    }
+    .header-date {
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: var(--r-xl);
+      padding: var(--sp-16) var(--sp-24);
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .header-date-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.55);
+      margin-bottom: var(--sp-6);
+    }
+    .header-date-value {
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.9);
+    }
+
+    /* ── Health Ring ─────────────────────────────────── */
+    /*
+      To render the ring, set the CSS custom property --hs to the health score 0-100.
+      The conic-gradient draws the arc automatically.
+      Easiest approach for agents: wrap the .ring-outer in a <div> with
+      style="--hs:78" and the gradient fills to 78%.
+    */
+    .health-ring-section {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-40);
+      flex-wrap: wrap;
+    }
+    .ring-wrap { position: relative; flex-shrink: 0; }
+    .ring-outer {
+      width: 148px;
+      height: 148px;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--ring-color, var(--c-brand-50)) 0% calc(var(--hs, 0) * 1%),
+        var(--c-gray-10) calc(var(--hs, 0) * 1%) 100%
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ring-inner {
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      background: var(--c-gray-0);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .ring-score-value {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.5px;
+      color: var(--c-gray-80);
+    }
+    .ring-score-sub {
+      font-size: 11px;
+      color: var(--c-gray-40);
+      margin-top: var(--sp-4);
+    }
+    .ring-stats { display: flex; flex-direction: column; gap: var(--sp-12); flex: 1; min-width: 200px; }
+    .ring-stat {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-10);
+      padding: var(--sp-8) var(--sp-12);
+      background: var(--c-gray-0);
+      border: 1px solid var(--c-gray-10);
+      border-radius: var(--r-l);
+    }
+    .ring-stat-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .ring-stat-dot.ok    { background: var(--c-ok-60); }
+    .ring-stat-dot.warn  { background: var(--c-warn-40); }
+    .ring-stat-dot.fail  { background: var(--c-danger-50); }
+    .ring-stat-dot.brand { background: var(--c-brand-50); }
+    .ring-stat-label { flex: 1; font-size: 13px; color: var(--c-gray-60); }
+    .ring-stat-value { font-size: 14px; font-weight: 500; color: var(--c-gray-80); }
+
+    /* ── Metric Cards ────────────────────────────────── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+      gap: var(--sp-12);
+    }
+    .metric-card {
+      background: var(--c-gray-0);
+      border-radius: var(--r-xl);
+      padding: var(--sp-20);
+      border: 1.5px solid var(--c-gray-10);
+      border-top-width: 3px;
+      border-top-color: var(--c-gray-20);
+      box-shadow: var(--sh-card);
+      transition: box-shadow 0.15s ease, transform 0.12s ease;
+    }
+    .metric-card:hover { box-shadow: var(--sh-hover); transform: translateY(-2px); }
+    .metric-card.status-ok    { border-top-color: var(--c-ok-60); }
+    .metric-card.status-warn  { border-top-color: var(--c-warn-40); }
+    .metric-card.status-fail  { border-top-color: var(--c-danger-50); }
+    .metric-card.status-brand { border-top-color: var(--c-brand-50); }
+    .metric-card.status-info  { border-top-color: var(--c-gray-30); }
+
+    .metric-label {
+      font-size: 12px;
+      line-height: 17px;
+      color: var(--c-gray-50);
+      margin-bottom: var(--sp-8);
+    }
+    .metric-value {
+      font-size: 36px;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.5px;
+      margin-bottom: var(--sp-8);
+    }
+    .metric-value.ok    { color: var(--c-ok-70); }
+    .metric-value.warn  { color: var(--c-warn-70); }
+    .metric-value.fail  { color: var(--c-danger-50); }
+    .metric-value.brand { color: var(--c-brand-50); }
+    .metric-value.muted { color: var(--c-gray-40); }
+
+    .metric-pill {
+      display: inline-flex;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: var(--r-s);
+    }
+    .metric-pill.ok    { background: var(--c-ok-10);     color: var(--c-ok-70); }
+    .metric-pill.warn  { background: var(--c-warn-10);   color: var(--c-warn-70); }
+    .metric-pill.fail  { background: var(--c-danger-10); color: var(--c-danger-60); }
+    .metric-pill.brand { background: var(--c-brand-10);  color: var(--c-brand-50); }
+    .metric-pill.muted { background: var(--c-gray-10);   color: var(--c-gray-50); }
+
+    /* ── Panels ──────────────────────────────────────── */
+    .panel {
+      background: var(--c-gray-0);
+      border: 1.5px solid var(--c-gray-10);
+      border-radius: var(--r-xl);
+      padding: var(--sp-24);
+      box-shadow: var(--sh-card);
+    }
+    .panel-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--c-gray-50);
+      margin-bottom: var(--sp-20);
+    }
+    .panels-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-16);
+    }
+
+    /* ── Check rows ──────────────────────────────────── */
+    .checks-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 var(--sp-32);
+    }
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-12);
+      padding: var(--sp-12) 0;
+      border-bottom: 1px solid var(--c-gray-10);
+    }
+    .check-icon { flex-shrink: 0; width: 20px; height: 20px; }
+    .check-label { flex: 1; font-size: 14px; color: var(--c-gray-70); }
+    .check-target { font-size: 12px; color: var(--c-gray-30); white-space: nowrap; }
+
+    .status-chip {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 2px 10px;
+      border-radius: var(--r-s);
+      white-space: nowrap;
+    }
+    .status-chip.ok    { background: var(--c-ok-10);     color: var(--c-ok-70); }
+    .status-chip.warn  { background: var(--c-warn-10);   color: var(--c-warn-70); }
+    .status-chip.fail  { background: var(--c-danger-10); color: var(--c-danger-60); }
+    .status-chip.brand { background: var(--c-brand-10);  color: var(--c-brand-50); }
+    .status-chip.muted { background: var(--c-gray-10);   color: var(--c-gray-50); }
+
+    /* ── Bar charts ──────────────────────────────────── */
+    .bar-list { display: flex; flex-direction: column; gap: var(--sp-12); }
+    .bar-row  { display: flex; align-items: center; gap: var(--sp-12); }
+    .bar-label {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 12px;
+      color: var(--c-gray-70);
+      min-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .bar-track {
+      flex: 1;
+      height: 8px;
+      background: var(--c-gray-10);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+    }
+    .bar-fill.brand  { background: var(--c-brand-50); }
+    .bar-fill.light  { background: var(--c-brand-20); }
+    .bar-fill.ok     { background: var(--c-ok-60); }
+    .bar-fill.warn   { background: var(--c-warn-40); }
+    .bar-fill.danger { background: var(--c-danger-50); }
+    .bar-count { font-size: 13px; font-weight: 500; color: var(--c-gray-60); min-width: 28px; text-align: right; }
+
+    /* ── Mode coverage ───────────────────────────────── */
+    .coverage-row {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-12);
+      margin-bottom: var(--sp-10);
+    }
+    .coverage-row:last-child { margin-bottom: 0; }
+    .coverage-name { font-size: 13px; font-weight: 500; color: var(--c-gray-80); min-width: 130px; }
+    .coverage-track {
+      flex: 1;
+      height: 8px;
+      background: var(--c-gray-10);
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+      gap: 2px;
+    }
+    .coverage-seg { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+    .seg-light { background: var(--c-ok-60); }
+    .seg-dark  { background: var(--c-ok-70); }
+    .seg-miss  { background: var(--c-danger-50); }
+    .seg-warn  { background: var(--c-warn-40); }
+    .coverage-score { font-size: 13px; font-weight: 500; min-width: 36px; text-align: right; }
+    .coverage-score.full    { color: var(--c-ok-70); }
+    .coverage-score.partial { color: var(--c-warn-70); }
+    .coverage-score.low     { color: var(--c-danger-50); }
+
+    /* ── Panel note ──────────────────────────────────── */
+    .panel-note {
+      font-size: 12px;
+      line-height: 17px;
+      color: var(--c-gray-50);
+      margin-top: var(--sp-20);
+      padding-top: var(--sp-16);
+      border-top: 1px solid var(--c-gray-10);
+    }
+
+    /* ── Tables ──────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      text-align: left;
+      padding: var(--sp-12) var(--sp-16);
+      font-size: 13px;
+      line-height: 20px;
+      vertical-align: top;
+    }
+    th {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--c-gray-50);
+      border-bottom: 1.5px solid var(--c-gray-20);
+      background: var(--c-gray-5);
+      white-space: nowrap;
+    }
+    td { border-bottom: 1px solid var(--c-gray-10); color: var(--c-gray-70); }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: #fafbfc; }
+    .col-collection { font-weight: 500; color: var(--c-gray-80); }
+    .col-token-name { font-family: 'Roboto Mono', monospace; font-size: 12px; }
+    .col-literal    { font-family: 'Roboto Mono', monospace; font-size: 12px; color: var(--c-danger-50); font-weight: 500; }
+    .col-replacement { font-family: 'Roboto Mono', monospace; font-size: 12px; }
+
+    .count-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: var(--r-s);
+      background: var(--c-brand-10);
+      color: var(--c-brand-50);
+    }
+    .mode-tag {
+      display: inline-flex;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 6px;
+      border-radius: var(--r-s);
+      margin-right: 3px;
+    }
+    .mode-tag.active  { background: var(--c-ok-10);   color: var(--c-ok-70); }
+    .mode-tag.missing { background: var(--c-gray-10);  color: var(--c-gray-40); }
+
+    /* ── Semantic duplicate pair cards ───────────────── */
+    .dup-card {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-6);
+      padding: var(--sp-12);
+      background: var(--c-gray-10);
+      border: 1px solid var(--c-gray-20);
+      border-radius: var(--r-m);
+    }
+    .dup-row {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-8);
+      padding: var(--sp-4) var(--sp-8);
+      background: var(--c-gray-0);
+      border-radius: var(--r-s);
+      border-left: 3px solid transparent;
+    }
+    .dup-row.a { border-left-color: var(--c-brand-40); }
+    .dup-row.b { border-left-color: var(--c-warn-40); }
+    .dup-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: var(--r-s);
+      min-width: 50px;
+      text-align: center;
+    }
+    .dup-row.a .dup-label { background: var(--c-brand-10); color: var(--c-brand-80); }
+    .dup-row.b .dup-label { background: var(--c-warn-10);  color: var(--c-warn-70); }
+    .dup-token { font-family: 'Roboto Mono', monospace; font-size: 12px; color: var(--c-gray-80); word-break: break-all; }
+    .dup-divider {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--c-danger-50);
+      padding-left: 66px;
+    }
+
+    /* ── Footer ──────────────────────────────────────── */
+    .dashboard-footer {
+      text-align: center;
+      padding: var(--sp-32) 0 var(--sp-16);
+      font-size: 12px;
+      color: var(--c-gray-30);
+      border-top: 1px solid var(--c-gray-20);
+    }
+
+    /* ── Responsive ──────────────────────────────────── */
+    @media (max-width: 980px) {
+      .panels-2     { grid-template-columns: 1fr; }
+      .checks-grid  { grid-template-columns: 1fr; }
+      .health-ring-section { flex-direction: column; }
+      .bar-label    { min-width: 140px; }
+      .coverage-name { min-width: 90px; }
+    }
+    @media (max-width: 760px) {
+      .dashboard-header { padding: var(--sp-24) var(--sp-24); }
+      .header-title { font-size: 22px; }
+    }
+    @media (max-width: 640px) {
+      body { padding: var(--sp-16); }
+      .metrics-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 400px) {
+      .metrics-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+
+    <!-- ━━━ HEADER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <header class="dashboard-header section">
+      <div class="header-inner">
+        <div>
+          <h1 class="header-title">{{reportTitle}}</h1>
+          <p class="header-subtitle">{{reportSubtitle}}</p>
+          <div class="header-badges">
+            <!-- Example: <span class="badge badge-glass">Figma hSgrh1iz…</span> -->
+            {{headerBadges}}
+          </div>
+        </div>
+        <div class="header-date">
+          <div class="header-date-label">Generated</div>
+          <div class="header-date-value">{{generatedDate}}</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ━━━ OVERALL HEALTH SCORE ━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!--
+      Set --hs to the overall health score integer (0-100) on .ring-outer.
+      Set --ring-color to match the score: ok → var(--c-ok-60), warn → var(--c-warn-40), fail → var(--c-danger-50).
+      Example: <div class="ring-outer" style="--hs:78; --ring-color:var(--c-ok-60)">
+    -->
+    <section class="section">
+      <h2 class="section-title">Overall Health Score</h2>
+      <div class="panel">
+        <div class="health-ring-section">
+          <div class="ring-wrap">
+            <div class="ring-outer" style="--hs:{{healthScorePercent}}; --ring-color:{{healthScoreColor}}">
+              <div class="ring-inner">
+                <span class="ring-score-value">{{healthScoreLabel}}</span>
+                <span class="ring-score-sub">health</span>
+              </div>
+            </div>
+          </div>
+          <div class="ring-stats">
+            <!-- Example ring-stat:
+            <div class="ring-stat">
+              <span class="ring-stat-dot ok"></span>
+              <span class="ring-stat-label">Alias coverage</span>
+              <span class="ring-stat-value">94%</span>
+            </div>
+            -->
+            {{healthRingStats}}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ━━━ TOKEN ARCHITECTURE HEALTH ━━━━━━━━━━━━━━━━━ -->
+    <section class="section">
+      <h2 class="section-title">Token Architecture Health</h2>
+      <div class="metrics-grid">
+        <!--
+          Each metric card example:
+          <article class="metric-card status-ok">
+            <p class="metric-label">Alias layer coverage</p>
+            <p class="metric-value ok">94%</p>
+            <span class="metric-pill ok">Target: ≥ 90%</span>
+          </article>
+        -->
+        {{metricCards}}
+      </div>
+    </section>
+
+    <!-- ━━━ NAMING & CONSISTENCY ━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section class="section">
+      <h2 class="section-title">Naming and Semantic Consistency</h2>
+      <div class="panel">
+        <div class="checks-grid">
+          <!--
+            Each check row example:
+            <div class="check-row">
+              <div class="check-icon">
+                <svg viewBox="0 0 20 20" fill="none" width="20" height="20">
+                  <circle cx="10" cy="10" r="10" fill="#F1F8EA"/>
+                  <path d="M6 10.5L8.5 13L14 7" stroke="#016E1C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span class="check-label">Naming pattern compliance</span>
+              <span class="check-target">target 100%</span>
+              <span class="status-chip ok">98%</span>
+            </div>
+          -->
+          {{consistencyChecks}}
+        </div>
+      </div>
+    </section>
+
+    <!-- ━━━ REUSE & SCALABILITY ━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section class="section">
+      <h2 class="section-title">Reuse and Scalability</h2>
+      <div class="panels-2">
+
+        <div class="panel">
+          <div class="panel-title">Alias reuse across components</div>
+          <div class="bar-list">
+            <!--
+              Bar row example:
+              <div class="bar-row">
+                <span class="bar-label">color-action-primary-default</span>
+                <div class="bar-track"><div class="bar-fill brand" style="width:100%"></div></div>
+                <span class="bar-count">9×</span>
+              </div>
+            -->
+            {{reuseBarRows}}
+          </div>
+          <div class="panel-note">{{reuseNote}}</div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">
+            Mode coverage per component &mdash;
+            <span style="color:var(--c-gray-30);font-weight:400;">Light / Dark</span>
+          </div>
+          <!--
+            Coverage row example:
+            <div class="coverage-row">
+              <span class="coverage-name">Button</span>
+              <div class="coverage-track">
+                <div class="coverage-seg seg-light" style="width:50%"></div>
+                <div class="coverage-seg seg-dark"  style="width:50%"></div>
+              </div>
+              <span class="coverage-score full">2/2</span>
+            </div>
+          -->
+          {{modeCoverageRows}}
+          <div class="panel-note">{{modeCoverageNote}}</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ━━━ SEMANTIC DUPLICATES ━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section class="section">
+      <h2 class="section-title">Semantic Duplicates Detected</h2>
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:36%;">Duplicate pair (A vs B)</th>
+                <th>Analysis evidence and issue details</th>
+                <th style="width:18%;">Normalization target</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!--
+                Row example:
+                <tr>
+                  <td>
+                    <div class="dup-card">
+                      <div class="dup-row a">
+                        <span class="dup-label">Token A</span>
+                        <span class="dup-token">color-primary-content-default</span>
+                      </div>
+                      <div class="dup-divider">same as</div>
+                      <div class="dup-row b">
+                        <span class="dup-label">Token B</span>
+                        <span class="dup-token">primary-color-content-default</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td><strong>Detected in analysis:</strong> … <strong>Issue details:</strong> …</td>
+                  <td class="col-token-name">primary-color-content-default</td>
+                </tr>
+              -->
+              {{semanticDuplicateRows}}
+            </tbody>
+          </table>
+        </div>
+        <div class="panel-note">
+          Total semantic duplicates detected:
+          <strong style="color:var(--c-danger-50);">{{semanticDuplicatesCount}}</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- ━━━ DIRECT CSS OVERRIDES ━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section class="section">
+      <h2 class="section-title">Direct CSS Color Overrides</h2>
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Area</th>
+                <th>Literal override</th>
+                <th>Token replacement</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!--
+                Row example:
+                <tr>
+                  <td>Visualization labels</td>
+                  <td class="col-literal">#3F424D</td>
+                  <td class="col-replacement">var(--color-gray-70)</td>
+                  <td>2 occurrences in JS-generated label text</td>
+                </tr>
+              -->
+              {{directOverrideRows}}
+            </tbody>
+          </table>
+        </div>
+        <div class="panel-note">
+          Total direct CSS color overrides:
+          <strong style="color:var(--c-danger-50);">{{directOverridesCount}}</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- ━━━ TOKEN INVENTORY ━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section class="section">
+      <h2 class="section-title">Token Inventory &mdash; Variable Collections</h2>
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Collection</th>
+                <th>Group</th>
+                <th>Type</th>
+                <th>Tokens</th>
+                <th>Modes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!--
+                Row example (use rowspan on first <td> for multi-group collections):
+                <tr>
+                  <td class="col-collection" rowspan="3">Colors</td>
+                  <td class="col-token-name">global/brand</td>
+                  <td>COLOR</td>
+                  <td><span class="count-pill">10</span></td>
+                  <td>
+                    <span class="mode-tag active">Light</span>
+                    <span class="mode-tag active">Dark</span>
+                  </td>
+                </tr>
+              -->
+              {{inventoryRows}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ━━━ FOOTER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <footer class="dashboard-footer">
+      {{footerText}}
+    </footer>
+
+  </div>
+</body>
+</html>
 
