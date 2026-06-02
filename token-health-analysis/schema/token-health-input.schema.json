@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/token-health-input.schema.json",
+  "title": "Token Health Analysis Input",
+  "description": "Normalized input for token health dashboard generation",
+  "type": "object",
+  "required": [
+    "meta",
+    "collections"
+  ],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "projectName"
+      ],
+      "properties": {
+        "projectName": {
+          "type": "string"
+        },
+        "figmaFileUrl": {
+          "type": "string"
+        },
+        "sourceLabel": {
+          "type": "string"
+        },
+        "generatedAt": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "collections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "groups"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "type",
+                "tokens"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "COLOR",
+                    "FLOAT",
+                    "STRING",
+                    "BOOLEAN",
+                    "DIMENSION",
+                    "OTHER"
+                  ]
+                },
+                "tokens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "value"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean"
+                        ]
+                      },
+                      "modes": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "aliasOf": {
+                        "type": "string"
+                      },
+                      "chainDepth": {
+                        "type": "number"
+                      },
+                      "usedBy": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "modeCoverage": {
+            "type": "object",
+            "properties": {
+              "light": {
+                "type": "boolean"
+              },
+              "dark": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": true
+          },
+          "tokens": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "directCssOverrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "area",
+          "literal",
+          "replacement"
+        ],
+        "properties": {
+          "area": {
+            "type": "string"
+          },
+          "literal": {
+            "type": "string"
+          },
+          "replacement": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
