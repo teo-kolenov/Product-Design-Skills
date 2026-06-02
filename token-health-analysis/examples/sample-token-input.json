@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "projectName": "General style guide KEENETIC",
+    "figmaFileUrl": "https://www.figma.com/design/hSgrh1izjHNg45OBD37Z7j/General-style-guide-KEENETIC?node-id=9307-4709",
+    "sourceLabel": "Figma export",
+    "generatedAt": "2026-06-02"
+  },
+  "collections": [
+    {
+      "name": "Colors",
+      "groups": [
+        {
+          "name": "global/brand",
+          "type": "COLOR",
+          "tokens": [
+            {
+              "name": "color-brand-50",
+              "value": "#007BBE",
+              "modes": [
+                "Light",
+                "Dark"
+              ],
+              "description": "Primary brand action"
+            },
+            {
+              "name": "color-brand-40",
+              "value": "#219CDE",
+              "modes": [
+                "Light",
+                "Dark"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "global/gray",
+          "type": "COLOR",
+          "tokens": [
+            {
+              "name": "color-gray-80",
+              "value": "#303237",
+              "modes": [
+                "Light",
+                "Dark"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Sizes",
+      "groups": [
+        {
+          "name": "spacing",
+          "type": "FLOAT",
+          "tokens": [
+            {
+              "name": "sp-8",
+              "value": 8
+            },
+            {
+              "name": "sp-16",
+              "value": 16
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "components": [
+    {
+      "name": "Button",
+      "modeCoverage": {
+        "light": true,
+        "dark": true
+      },
+      "tokens": [
+        "color-brand-50",
+        "color-gray-80"
+      ]
+    },
+    {
+      "name": "Tooltip",
+      "modeCoverage": {
+        "light": true,
+        "dark": false
+      },
+      "tokens": [
+        "color-gray-80"
+      ]
+    }
+  ],
+  "directCssOverrides": [
+    {
+      "area": "Visualization labels",
+      "literal": "#3F424D",
+      "replacement": "var(--color-gray-70)",
+      "details": "2 occurrences"
+    }
+  ]
+}
