@@ -11,7 +11,7 @@ These examples are intentionally plain so they can be used in Claude Code, OpenA
 ## 2) Analyze from Figma URL
 
 ```text
-/token-health-analysis FIGMA https://www.figma.com/design/hSgrh1izjHNg45OBD37Z7j/General-style-guide-KEENETIC?node-id=9307-4709 OUTPUT ./token-strategy-dashboard.html
+/token-health-analysis FIGMA https://www.figma.com/design/hSgrh1 ./token-strategy-dashboard.html
 ```
 
 ## 3) Analyze from JSON
